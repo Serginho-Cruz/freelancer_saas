@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enum para os tipos de usuário (o que discutimos sobre Roles)
+enum UserRole {
+  CLIENT
+  FREELANCER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String // Aqui salvaremos o hash do Bcrypt
+  name         String
+  role         UserRole @default(FREELANCER)
+  tokenVersion Int      @default(0) // Para o logout global que você planejou
+  createdAt    DateTime @default(now())
+
+  jobs      Job[]      @relation("CompanyJobs")
+  proposals Proposal[]
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  budget      Float
+  createdAt   DateTime @default(now())
+
+  ownerId String
+  owner   User   @relation("CompanyJobs", fields: [ownerId], references: [id])
+
+  proposals Proposal[]
+}
+
+model Proposal {
+  id        String   @id @default(uuid())
+  value     Float
+  message   String
+  createdAt DateTime @default(now())
+
+  freelancerId String
+  freelancer   User   @relation(fields: [freelancerId], references: [id])
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id])
+}
